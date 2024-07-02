@@ -40,6 +40,12 @@
             <router-link to="/events">事件列表</router-link>
           </a-menu-item>
         </a-sub-menu>
+        <a-menu-item key="5">
+          <router-link to="/aiChat">
+            <pie-chart-outlined />
+            <span>智能语言聊天</span>
+          </router-link>
+        </a-menu-item>
         <!--  <a-menu-item key="3">
           <router-link to="/about">
             <file-outlined />

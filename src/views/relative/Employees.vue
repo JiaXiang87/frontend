@@ -17,7 +17,7 @@
         <a-button type="primary" style="margin-right: 16px" @click="showAddModal">新增数据</a-button>
       </div>
     </a-card>
-    <a-table :columns="columns" :dataSource="data" rowKey="id">
+    <a-table :columns="columns" :dataSource="data" rowKey="id" style="margin: 6px;">
       <template v-slot:bodyCell="{ column, record }">
         <span v-if="column.key === 'action'">
           <a-button type="link" @click="showEditModal(record)">编辑</a-button>
@@ -86,7 +86,7 @@ const data = ref([]);
 const isModalVisible = ref(false);
 const modalTitle = ref('新增工作人员');
 const form = reactive({
-  id:0,
+  id: 0,
   org_id: 0,
   client_id: 0,
   username: '',
@@ -106,6 +106,28 @@ const form = reactive({
   updated_by: 0,
   remove: '0'
 });
+
+const finalForm = reactive({
+  id: 0,
+  org_id: 0,
+  client_id: 0,
+  username: '',
+  gender: '',
+  phone: '',
+  id_card: '',
+  birthday: '',
+  hire_date: '',
+  resign_date: '',
+  imgset_dir: '',
+  profile_photo: '',
+  description: '',
+  isactive: '1',
+  created: '',
+  created_by: 0,
+  updated: '',
+  updated_by: 0,
+  remove: '0'
+})
 
 const columns = [
   { title: '编号', dataIndex: 'id', key: 'id' },
@@ -180,15 +202,26 @@ const showEditModal = (record: any) => {
 const handleOk = async () => {
   try {
     console.log("handleOk", form);
-    form.updated = dayjs().format('YYYY-MM-DD HH:mm:ss');
-    form.updated_by = userStore.userInfo.id;
+    Object.assign(finalForm, form);
+
+    if (dayjs(finalForm.birthday).isValid()) {
+      finalForm.birthday = dayjs(finalForm.birthday).format('YYYY-MM-DD HH:mm:ss');
+    }
+    if (dayjs(finalForm.hire_date).isValid()) {
+      finalForm.hire_date = dayjs(finalForm.hire_date).format('YYYY-MM-DD HH:mm:ss');
+    }
+    if (dayjs(finalForm.resign_date).isValid()) {
+      finalForm.resign_date = dayjs(finalForm.resign_date).format('YYYY-MM-DD HH:mm:ss');
+    }
+    finalForm.updated = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    finalForm.updated_by = userStore.userInfo.id;
     if (modalTitle.value === '新增工作人员') {
-      form.created = form.updated;
-      form.created_by = userStore.userInfo.id;
-      await addEmployee(form);
+      finalForm.created = finalForm.updated;
+      finalForm.created_by = userStore.userInfo.id;
+      await addEmployee(finalForm);
       message.success('新增成功');
     } else {
-      await updateEmployee(form.id, form);
+      await updateEmployee(finalForm.id, finalForm);
       message.success('更新成功');
     }
     fetchData();

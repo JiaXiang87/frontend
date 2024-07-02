@@ -17,7 +17,7 @@
         <a-button type="primary" style="margin-right: 16px" @click="showAddModal">新增数据</a-button>
       </div>
     </a-card>
-    <a-table :columns="columns" :dataSource="data" rowKey="id">
+    <a-table :columns="columns" :dataSource="data" rowKey="id" style="margin: 6px;">
       <template v-slot:bodyCell="{ column, record }">
         <span v-if="column.key === 'action'">
           <a-button type="link" @click="showEditModal(record)">编辑</a-button>
@@ -96,6 +96,30 @@ const form = reactive({
   birthday: '',
   checkin_date: '',
   checkout_date: '',
+  imgset_dir: '',
+  profile_photo: '',
+  description: '',
+  isactive: '1',
+  created: '',
+  created_by: 0,
+  updated: '',
+  updated_by: 0,
+  remove: '0'
+});
+
+const finalForm = reactive({
+  id: 0,
+  org_id: 0,
+  client_id: 0,
+  name: '',
+  gender: '',
+  phone: '',
+  id_card: '',
+  birthday: '',
+  checkin_date: '',
+  checkout_date: '',
+  imgset_dir: '',
+  profile_photo: '',
   description: '',
   isactive: '1',
   created: '',
@@ -141,6 +165,8 @@ const showAddModal = () => {
     birthday: '',
     checkin_date: '',
     checkout_date: '',
+    imgset_dir: '',
+    profile_photo: '',
     description: '',
     isactive: '1',
     created: '',
@@ -161,15 +187,26 @@ const showEditModal = (record: any) => {
 const handleOk = async () => {
   try {
     console.log("handleOk", form);
-    form.updated = dayjs().format('YYYY-MM-DD HH:mm:ss');
-    form.updated_by = userStore.userInfo.id;
+    Object.assign(finalForm, form);
+
+    if (dayjs(finalForm.birthday).isValid()) {
+      finalForm.birthday = dayjs(finalForm.birthday).format('YYYY-MM-DD HH:mm:ss');
+    }
+    if (dayjs(finalForm.checkin_date).isValid()) {
+      finalForm.checkin_date = dayjs(finalForm.checkin_date).format('YYYY-MM-DD HH:mm:ss');
+    }
+    if (dayjs(finalForm.checkout_date).isValid()) {
+      finalForm.checkout_date = dayjs(finalForm.checkout_date).format('YYYY-MM-DD HH:mm:ss');
+    }
+    finalForm.updated = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    finalForm.updated_by = userStore.userInfo.id;
     if (modalTitle.value === '新增义工') {
-      form.created = form.updated;
-      form.created_by = userStore.userInfo.id;
-      await addVolunteer(form);
+      finalForm.created = finalForm.updated;
+      finalForm.created_by = userStore.userInfo.id;
+      await addVolunteer(finalForm);
       message.success('新增成功');
     } else {
-      await updateVolunteer(form.id, form);
+      await updateVolunteer(finalForm.id, finalForm);
       message.success('更新成功');
     }
     fetchData();

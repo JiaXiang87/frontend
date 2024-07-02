@@ -31,6 +31,11 @@ const routes = [
         name: 'events',
         component: () => import('../views/event/EventView.vue'),
       },
+      {
+        path: '/aiChat',
+        name: 'aiChat',
+        component: () => import('../views/AIChatView.vue'),
+      },
     ]
   },
   {

@@ -11,22 +11,18 @@
       </template>
     </a-table>
 
-    <a-modal 
-      v-model:visible="modalVisible"
-      :title="`监控 - ${currentRecord?.id}`"
-      @ok="handleOk"
-      @cancel="handleCancel"
-    >
-      <video controls autoplay :src="currentRecord?.url"></video>
+    <a-modal v-model:visible="modalVisible" :title="`监控 - ${currentRecord?.id}`" @ok="handleOk" @cancel="handleCancel">
+      <video ref="videoRef" controls style="width: 100%">
+        Your browser does not support the video tag.
+      </video>
     </a-modal>
   </div>
 </template>
 
-
-
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { message } from 'ant-design-vue';
+import Hls from 'hls.js';
 
 interface Record {
   id: number;
@@ -35,8 +31,8 @@ interface Record {
 }
 
 const data = ref([
-  { id: 1, status: '运行中', url: 'rtsp://47.93.76.253:8554/camera_test' },
-  { id: 2, status: '已停止', url: 'rtsp://47.93.76.253:8554/camera_test'}
+  { id: 1, status: '运行中', url: 'http://119.3.183.185/hls/stream.m3u8' },
+  { id: 2, status: '已停止', url: 'http://119.3.183.185/hls/stream.m3u8' }
 ]);
 
 const columns = [
@@ -47,10 +43,29 @@ const columns = [
 
 const modalVisible = ref(false);
 const currentRecord = ref<Record | null>(null);
+const videoRef = ref(null);
 
 const showModal = (record: Record) => {
   currentRecord.value = record;
   modalVisible.value = true;
+  loadVideo(record.url);
+};
+
+const loadVideo = (url: string) => {
+  if (Hls.isSupported()) {
+    const video = videoRef.value;
+    const hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      video.play();
+    });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;
+    video.addEventListener('loadedmetadata', () => {
+      video.play();
+    });
+  }
 };
 
 const handleOk = () => {
@@ -62,4 +77,12 @@ const handleCancel = () => {
   modalVisible.value = false;
   message.info('关闭视频播放');
 };
+
+onMounted(() => {
+  // 逻辑代码...
+});
+
+onUnmounted(() => {
+  // 清理代码...
+});
 </script>
