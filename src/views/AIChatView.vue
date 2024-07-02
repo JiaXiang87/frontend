@@ -2,10 +2,8 @@
   <a-card class="chat-container">
     <div class="messages">
       <div v-for="message in messages" :key="message.id" class="message" :class="{ 'from-user': message.fromUser }">
-        <!-- AI消息 -->
         <a-avatar v-if="!message.fromUser" :src="aiAvatar" class="avatar" />
         <div class="text" :class="{ 'from-user': message.fromUser }">{{ message.text }}</div>
-        <!-- 用户消息 -->
         <a-avatar v-if="message.fromUser" :src="userAvatar" class="avatar" />
       </div>
     </div>
@@ -14,45 +12,139 @@
       <a-button type="primary" icon="send" @click="sendMessage">发送</a-button>
       <a-button type="dashed" icon="audio" @click="simulateVoiceInput">语音</a-button>
     </div>
+    <audio v-if="audioUrl" :src="audioUrl" controls ref="audioPlayer"></audio>
   </a-card>
 </template>
 
 <script setup lang='ts'>
 import { ref } from 'vue';
+import axios from 'axios';
 
 const userAvatar = ref<string>('path/to/user-avatar.jpg');
 const aiAvatar = ref<string>('path/to/ai-avatar.jpg');
 const currentMessage = ref<string>('');
 const messages = ref<Array<{id: number, text: string, fromUser: boolean}>>([]);
+const sessionId = ref<string | null>(null);
+const audioUrl = ref<string | null>(null);
+const recorder = ref<MediaRecorder | null>(null);
+const audioChunks = ref<Blob[]>([]);
 
+async function startConversation() {
+  try {
+    const response = await axios.post('http://localhost:5000/start_conversation');
+    sessionId.value = response.data.session_id;
+    const openingMessage = {
+      id: messages.value.length + 1,
+      text: response.data.opening_text,
+      fromUser: false
+    };
+    messages.value.push(openingMessage);
+    const replyMessage = {
+      id: messages.value.length + 2,
+      text: response.data.reply_text,
+      fromUser: false
+    };
+    messages.value.push(replyMessage);
+    audioUrl.value = response.data.reply_audio_url;
+    playAudio();
+  } catch (error) {
+    console.error('Error starting conversation:', error);
+  }
+}
 
 function sendMessage() {
   if (currentMessage.value.trim() !== '') {
-    messages.value.push({
+    const userMessage = {
       id: messages.value.length + 1,
       text: currentMessage.value,
       fromUser: true
-    });
-    // 模拟AI回复
-    setTimeout(() => {
-      messages.value.push({
-        id: messages.value.length + 1,
-        text: '你好，我是晓军',
-        fromUser: false
-      });
-    }, 1000);
+    };
+    messages.value.push(userMessage);
+    handleConversation(userMessage.text);
     currentMessage.value = ''; // 清空输入框
   }
 }
 
 function simulateVoiceInput() {
-  // 模拟语音输入，实际项目中应连接到语音API
-  messages.value.push({
-    id: messages.value.length + 1,
-    text: '这是一条语音消息',
-    fromUser: true
-  });
+  if (!recorder.value) {
+    startRecording();
+  } else {
+    stopRecording();
+  }
 }
+
+function startRecording() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      recorder.value = new MediaRecorder(stream);
+      recorder.value.ondataavailable = e => {
+        audioChunks.value.push(e.data);
+      };
+      recorder.value.onstop = async () => {
+        const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64AudioMessage = reader.result?.toString().split(',')[1];
+          handleVoiceConversation(base64AudioMessage || '');
+        };
+        reader.readAsDataURL(audioBlob);
+        audioChunks.value = [];
+      };
+      recorder.value.start();
+    })
+    .catch(error => console.error('Error accessing microphone:', error));
+}
+
+function stopRecording() {
+  recorder.value?.stop();
+}
+
+async function handleConversation(userInput: string) {
+  try {
+    const response = await axios.post('http://localhost:5000/continue_conversation', {
+      text: userInput,
+      session_id: sessionId.value
+    });
+    const aiMessage = {
+      id: messages.value.length + 1,
+      text: response.data.reply_text,
+      fromUser: false
+    };
+    messages.value.push(aiMessage);
+    audioUrl.value = response.data.audio_url;
+    playAudio();
+  } catch (error) {
+    console.error('Error continuing conversation:', error);
+  }
+}
+
+async function handleVoiceConversation(audioBase64: string) {
+  try {
+    const response = await axios.post('http://localhost:5000/continue_conversation', {
+      audio: audioBase64,
+      session_id: sessionId.value
+    });
+    const aiMessage = {
+      id: messages.value.length + 1,
+      text: response.data.reply_text,
+      fromUser: false
+    };
+    messages.value.push(aiMessage);
+    audioUrl.value = response.data.audio_url;
+    playAudio();
+  } catch (error) {
+    console.error('Error continuing conversation:', error);
+  }
+}
+
+function playAudio() {
+  const audioElement = (this.$refs.audioPlayer as HTMLAudioElement);
+  if (audioElement) {
+    audioElement.play();
+  }
+}
+
+startConversation();
 </script>
 
 <style scoped>

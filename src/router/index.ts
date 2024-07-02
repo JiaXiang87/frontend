@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../components/Dashboard.vue';
+import { Components } from 'ant-design-vue/es/date-picker/generatePicker';
 
 const routes = [
   {
@@ -35,6 +36,11 @@ const routes = [
         path: '/aiChat',
         name: 'aiChat',
         component: () => import('../views/AIChatView.vue'),
+      },
+      {
+        path: '/home',
+        name: 'home',
+        component: () => import('../views/HomeView.vue'),
       },
     ]
   },
