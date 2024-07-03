@@ -85,7 +85,7 @@ function simulateVoiceInput() {
 function startRecording() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
-      recorder.value = new MediaRecorder(stream);
+      recorder.value = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       recorder.value.ondataavailable = e => {
         audioChunks.value.push(e.data);
       };
@@ -100,7 +100,7 @@ function stopRecordingAndSend() {
     recorder.value.stop();
     isRecording.value = false;
     recorder.value.onstop = async () => {
-      const audioBlob = new Blob(audioChunks.value, { type: 'audio/pcm' });
+      const audioBlob = new Blob(audioChunks.value, { type: 'audio/webm' });
       const audioUrl = URL.createObjectURL(audioBlob);
       const userAudioMessage = {
         id: messages.value.length + 1,
@@ -109,24 +109,52 @@ function stopRecordingAndSend() {
         fromUser: true
       };
       messages.value.push(userAudioMessage);
-      sendAudioToServer(audioBlob);
+      const pcmAudioBlob = await convertToPCM(audioBlob);
+      sendAudioToServer(pcmAudioBlob);
       audioChunks.value = [];
     };
   }
+}
+
+async function convertToPCM(blob: Blob): Promise<Blob> {
+  const audioContext = new AudioContext({ sampleRate: 16000 }); // Ensure 16kHz
+  const arrayBuffer = await blob.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+  const pcmArrayBuffer = audioBufferToPCM(audioBuffer);
+
+  return new Blob([pcmArrayBuffer], { type: 'audio/pcm' });
+}
+
+function audioBufferToPCM(audioBuffer: AudioBuffer): ArrayBuffer {
+  const length = audioBuffer.length * audioBuffer.numberOfChannels * 2; // 16-bit audio
+  const result = new ArrayBuffer(length);
+  const view = new DataView(result);
+
+  let offset = 0;
+  for (let i = 0; i < audioBuffer.length; i++) {
+    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+      let sample = audioBuffer.getChannelData(channel)[i];
+      sample = Math.max(-1, Math.min(1, sample)); // Clamp sample value
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true); // PCM 16-bit signed little-endian
+      offset += 2;
+    }
+  }
+
+  return result;
 }
 
 async function sendAudioToServer(audioBlob: Blob) {
   const reader = new FileReader();
 
   reader.onload = async () => {
-    // 确保result不为空且是字符串类型
     const base64Audio = reader.result ? reader.result.toString().split(',')[1] : '';
 
     const payload = {
       audio: base64Audio,
       session_id: sessionId.value
     };
-    console.log(payload);
+
     try {
       const response = await axios.post('http://localhost:5000/continue_conversation', payload, {
         headers: {
@@ -151,8 +179,6 @@ async function sendAudioToServer(audioBlob: Blob) {
 
   reader.readAsDataURL(audioBlob);
 }
-
-
 
 async function handleConversation(userInput: string) {
   try {
