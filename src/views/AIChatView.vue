@@ -100,7 +100,7 @@ function stopRecordingAndSend() {
     recorder.value.stop();
     isRecording.value = false;
     recorder.value.onstop = async () => {
-      const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' });
+      const audioBlob = new Blob(audioChunks.value, { type: 'audio/pcm' });
       const audioUrl = URL.createObjectURL(audioBlob);
       const userAudioMessage = {
         id: messages.value.length + 1,
@@ -116,27 +116,43 @@ function stopRecordingAndSend() {
 }
 
 async function sendAudioToServer(audioBlob: Blob) {
-  const formData = new FormData();
-  formData.append('audio', audioBlob);
-  formData.append('session_id', sessionId.value!);
+  const reader = new FileReader();
 
-  try {
-    const response = await axios.post('http://localhost:5000/continue_conversation', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-    const aiMessage = {
-      id: messages.value.length + 1,
-      text: response.data.reply_text,
-      audioUrl: response.data.reply_audio_url,
-      fromUser: false
+  reader.onload = async () => {
+    // 确保result不为空且是字符串类型
+    const base64Audio = reader.result ? reader.result.toString().split(',')[1] : '';
+
+    const payload = {
+      audio: base64Audio,
+      session_id: sessionId.value
     };
-    messages.value.push(aiMessage);
-  } catch (error) {
-    console.error('Error continuing conversation:', error);
-  }
+    console.log(payload);
+    try {
+      const response = await axios.post('http://localhost:5000/continue_conversation', payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const aiMessage = {
+        id: messages.value.length + 1,
+        text: response.data.reply_text,
+        audioUrl: response.data.audio_url,
+        fromUser: false
+      };
+      messages.value.push(aiMessage);
+    } catch (error) {
+      console.error('Error continuing conversation:', error);
+    }
+  };
+
+  reader.onerror = error => {
+    console.error('Error reading audio file:', error);
+  };
+
+  reader.readAsDataURL(audioBlob);
 }
+
+
 
 async function handleConversation(userInput: string) {
   try {
