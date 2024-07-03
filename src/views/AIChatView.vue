@@ -1,33 +1,43 @@
 <template>
   <a-card class="chat-container">
     <div class="messages">
-      <div v-for="message in messages" :key="message.id" class="message" :class="{ 'from-user': message.fromUser }">
-        <a-avatar v-if="!message.fromUser" :src="aiAvatar" class="avatar" />
-        <div class="text" :class="{ 'from-user': message.fromUser }">{{ message.text }}</div>
-        <a-avatar v-if="message.fromUser" :src="userAvatar" class="avatar" />
+      <div v-for="message in messages" :key="message.id" >
+        <div v-if="!message.fromUser">
+          <div class="message">
+            <a-avatar :src="aiAvatar" class="avatar" />
+            <div class="text" v-if="message.text" :class="{ 'from-user': message.fromUser }">{{ message.text }}</div>
+          </div>
+          <audio style="margin-left: 30px;" v-if="message.audioUrl" controls :src="message.audioUrl" class="audio-message"></audio>
+        </div>
+        <div v-if="message.fromUser" class="message from-user" >
+          <div class="text" v-if="message.text" :class="{ 'from-user': message.fromUser }">{{ message.text }}</div>
+          <audio v-if="message.audioUrl" controls :src="message.audioUrl" class="audio-message"></audio>
+          <a-avatar  :src="userAvatar" class="avatar" />
+        </div>
       </div>
     </div>
     <div class="input-area">
       <a-input v-model:value="currentMessage" placeholder="输入消息..." @keyup.enter="sendMessage" />
       <a-button type="primary" icon="send" @click="sendMessage">发送</a-button>
-      <a-button type="dashed" icon="audio" @click="simulateVoiceInput">语音</a-button>
+      <a-button type="dashed" icon="audio" @click="simulateVoiceInput">
+        {{ isRecording ? '停止' : '语音' }}
+      </a-button>
     </div>
-    <audio v-if="audioUrl" :src="audioUrl" controls ref="audioPlayer"></audio>
   </a-card>
 </template>
 
 <script setup lang='ts'>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 const userAvatar = ref<string>('path/to/user-avatar.jpg');
 const aiAvatar = ref<string>('path/to/ai-avatar.jpg');
 const currentMessage = ref<string>('');
-const messages = ref<Array<{id: number, text: string, fromUser: boolean}>>([]);
+const messages = ref<Array<{id: number, text?: string, audioUrl?: string, isAudio?: boolean, fromUser: boolean}>>([]);
 const sessionId = ref<string | null>(null);
-const audioUrl = ref<string | null>(null);
 const recorder = ref<MediaRecorder | null>(null);
 const audioChunks = ref<Blob[]>([]);
+const isRecording = ref<boolean>(false);
 
 async function startConversation() {
   try {
@@ -42,11 +52,10 @@ async function startConversation() {
     const replyMessage = {
       id: messages.value.length + 2,
       text: response.data.reply_text,
+      audioUrl: response.data.reply_audio_url,
       fromUser: false
     };
     messages.value.push(replyMessage);
-    audioUrl.value = response.data.reply_audio_url;
-    playAudio();
   } catch (error) {
     console.error('Error starting conversation:', error);
   }
@@ -66,10 +75,10 @@ function sendMessage() {
 }
 
 function simulateVoiceInput() {
-  if (!recorder.value) {
+  if (!isRecording.value) {
     startRecording();
   } else {
-    stopRecording();
+    stopRecordingAndSend();
   }
 }
 
@@ -80,23 +89,53 @@ function startRecording() {
       recorder.value.ondataavailable = e => {
         audioChunks.value.push(e.data);
       };
-      recorder.value.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64AudioMessage = reader.result?.toString().split(',')[1];
-          handleVoiceConversation(base64AudioMessage || '');
-        };
-        reader.readAsDataURL(audioBlob);
-        audioChunks.value = [];
-      };
-      recorder.value.start();
+      recorder.value?.start();
+      isRecording.value = true;
     })
     .catch(error => console.error('Error accessing microphone:', error));
 }
 
-function stopRecording() {
-  recorder.value?.stop();
+function stopRecordingAndSend() {
+  if (recorder.value) {
+    recorder.value.stop();
+    isRecording.value = false;
+    recorder.value.onstop = async () => {
+      const audioBlob = new Blob(audioChunks.value, { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const userAudioMessage = {
+        id: messages.value.length + 1,
+        audioUrl: audioUrl,
+        isAudio: true,
+        fromUser: true
+      };
+      messages.value.push(userAudioMessage);
+      sendAudioToServer(audioBlob);
+      audioChunks.value = [];
+    };
+  }
+}
+
+async function sendAudioToServer(audioBlob: Blob) {
+  const formData = new FormData();
+  formData.append('audio', audioBlob);
+  formData.append('session_id', sessionId.value!);
+
+  try {
+    const response = await axios.post('http://localhost:5000/continue_conversation', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    const aiMessage = {
+      id: messages.value.length + 1,
+      text: response.data.reply_text,
+      audioUrl: response.data.reply_audio_url,
+      fromUser: false
+    };
+    messages.value.push(aiMessage);
+  } catch (error) {
+    console.error('Error continuing conversation:', error);
+  }
 }
 
 async function handleConversation(userInput: string) {
@@ -108,50 +147,25 @@ async function handleConversation(userInput: string) {
     const aiMessage = {
       id: messages.value.length + 1,
       text: response.data.reply_text,
+      audioUrl: response.data.audio_url,
       fromUser: false
     };
     messages.value.push(aiMessage);
-    audioUrl.value = response.data.audio_url;
-    playAudio();
   } catch (error) {
     console.error('Error continuing conversation:', error);
   }
 }
 
-async function handleVoiceConversation(audioBase64: string) {
-  try {
-    const response = await axios.post('http://localhost:5000/continue_conversation', {
-      audio: audioBase64,
-      session_id: sessionId.value
-    });
-    const aiMessage = {
-      id: messages.value.length + 1,
-      text: response.data.reply_text,
-      fromUser: false
-    };
-    messages.value.push(aiMessage);
-    audioUrl.value = response.data.audio_url;
-    playAudio();
-  } catch (error) {
-    console.error('Error continuing conversation:', error);
-  }
-}
-
-function playAudio() {
-  const audioElement = (this.$refs.audioPlayer as HTMLAudioElement);
-  if (audioElement) {
-    audioElement.play();
-  }
-}
-
-startConversation();
+onMounted(() => {
+  startConversation();
+});
 </script>
 
 <style scoped>
 .chat-container {
   display: flex;
   flex-direction: column;
-  height: 500px;  /* 限制整个聊天容器的高度 */
+  min-height: 500px;  /* 限制整个聊天容器的高度 */
   margin: 20px auto;
   width: 800px;
   border: 1px solid #ccc;
@@ -175,13 +189,13 @@ startConversation();
 }
 
 .from-user .text {
-  margin-left: 8px; /* 文本在头像左侧 */
-  background-color: #e6ffe6; /* 浅绿色背景 */
+  margin-left: 8px;
+  background-color: #e6ffe6; 
 }
 
 .text {
   padding: 6px 12px;
-  background-color: #f0f0f0; /* 浅灰色背景 */
+  background-color: #f0f0f0; 
   border-radius: 10px;
   max-width: 70%; /* 限制最大宽度 */
 }
@@ -190,6 +204,10 @@ startConversation();
   flex-shrink: 0;
   width: 30px;
   height: 30px;
+}
+
+.audio-message {
+  max-width: 70%; /* 限制最大宽度 */
 }
 
 .input-area {
