@@ -154,7 +154,7 @@ async function sendAudioToServer(audioBlob: Blob) {
       audio: base64Audio,
       session_id: sessionId.value
     };
-
+    
     try {
       const response = await axios.post('http://localhost:5000/continue_conversation', payload, {
         headers: {

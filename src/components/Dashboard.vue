@@ -5,7 +5,7 @@
       <div v-if="!collapsed" class="logo" >智慧养老系统</div>
       <a-menu theme="dark" mode="inline" :defaultSelectedKeys="[selectedKey]" @click="updateSelectedKey">
         <a-menu-item key="1">
-          <router-link to="/">
+          <router-link to="/home">
             <home-outlined />
             <span>首页</span>
           </router-link>
@@ -38,6 +38,9 @@
           </template>
           <a-menu-item key="4-1">
             <router-link to="/events">事件列表</router-link>
+          </a-menu-item>
+          <a-menu-item key="4-2">
+            <router-link to="/eventAnalysis">事件分析</router-link>
           </a-menu-item>
         </a-sub-menu>
         <a-menu-item key="5">
@@ -131,13 +134,14 @@ const updateSelectedKey = (e: any) => {
 const breadcrumbs = computed(() => {
   const paths = route.path.split('/').filter(p => p);
   const breadcrumbsMap: { [key: string]: string} = {
-    '': '首页',
+    'home': '首页',
     'oldpersons': '人员管理 / 老人信息列表',
     'employees': '人员管理 / 工作人员列表',
     'volunteers': '人员管理 / 义工信息管理',
     'monitors': '监控管理',
-    'events': '事件管理/事件列表',
-    'aiChat': '智能语言聊天'
+    'events': '事件管理 / 事件列表',
+    'aiChat': '智能语言聊天',
+    'eventAnalysis': '事件管理 / 事件分析',
   };
 
   return paths.map(path => breadcrumbsMap[path] || '未知页面');

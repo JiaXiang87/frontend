@@ -42,7 +42,7 @@ const login = async () => {
     // 将 token 存储在本地存储中
     localStorage.setItem('token', response.token);
     // 跳转到主页或其他页面
-    router.push('/');
+    router.push('/home');
   } catch (error) {
     console.error('登录失败', error);
     alert('登录失败，请检查用户名和密码');

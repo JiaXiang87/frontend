@@ -6,6 +6,7 @@ const routes = [
   {
     path: '/',
     component: DashboardView,
+    redirect: '/login',
     children: [
       {
         path: '/oldpersons',
@@ -42,6 +43,11 @@ const routes = [
         name: 'home',
         component: () => import('../views/HomeView.vue'),
       },
+      {
+        path: '/eventAnalysis',
+        name: 'eventAnalysis',
+        component: () => import("../views/event/EventAnalysis.vue")
+      }
     ]
   },
   {
