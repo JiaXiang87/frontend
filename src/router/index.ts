@@ -26,7 +26,7 @@ const routes = [
       {
         path: '/monitors',
         name: 'monitors',
-        component: () => import('../views/MonitorView.vue'),
+        component: () => import('../views/monitor/MonitorView.vue'),
       },
       {
         path: '/events',
@@ -47,6 +47,11 @@ const routes = [
         path: '/eventAnalysis',
         name: 'eventAnalysis',
         component: () => import("../views/event/EventAnalysis.vue")
+      },
+      {
+        path: '/task',
+        name: 'task',
+        component: () => import("../views/monitor/TaskView.vue")
       }
     ]
   },

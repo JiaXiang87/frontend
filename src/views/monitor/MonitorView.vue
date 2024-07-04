@@ -26,7 +26,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import Hls from 'hls.js';
-import { getAllVideoMonitors, createVideoMonitor, deleteVideoMonitor } from '../services/monitorService';
+import { getAllVideoMonitors, createVideoMonitor, deleteVideoMonitor } from '../../services/monitorService';
 
 interface Record {
   id: number;

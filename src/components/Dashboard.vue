@@ -25,13 +25,19 @@
             <router-link to="/volunteers">义工信息管理</router-link>
           </a-menu-item>
         </a-sub-menu>
-        <a-menu-item key="3">
-          <router-link to="/monitors">
+        <a-sub-menu key="sub2">
+          <template #title>
             <insert-row-below-outlined />
             <span>监控管理</span>
-          </router-link>
-        </a-menu-item>
-        <a-sub-menu key="sub2">
+          </template>
+          <a-menu-item key="3-1">
+            <router-link to="/monitors">监控列表</router-link>
+          </a-menu-item>
+          <a-menu-item key="3-2">
+            <router-link to="/task">任务列表</router-link>
+          </a-menu-item>
+        </a-sub-menu>
+        <a-sub-menu key="sub3">
           <template #title>
             <exception-outlined />
             <span>事件管理</span>
@@ -43,6 +49,7 @@
             <router-link to="/eventAnalysis">事件分析</router-link>
           </a-menu-item>
         </a-sub-menu>
+        
         <a-menu-item key="5">
           <router-link to="/aiChat">
             <robot-outlined />
@@ -138,7 +145,8 @@ const breadcrumbs = computed(() => {
     'oldpersons': '人员管理 / 老人信息列表',
     'employees': '人员管理 / 工作人员列表',
     'volunteers': '人员管理 / 义工信息管理',
-    'monitors': '监控管理',
+    'monitors': '监控管理 / 监控列表',
+    'task': '监控管理 / 任务列表',
     'events': '事件管理 / 事件列表',
     'aiChat': '智能语言聊天',
     'eventAnalysis': '事件管理 / 事件分析',
