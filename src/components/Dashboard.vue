@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, } from 'vue';
+import { ref, computed, watch, onMounted, } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '../stores/userStore';
 import { UserOutlined,HomeOutlined,InsertRowBelowOutlined,ExceptionOutlined,RobotOutlined,LogoutOutlined } from '@ant-design/icons-vue';
@@ -164,6 +164,10 @@ function logout() {
   userStore.userLogout();
   router.push('/login');
 }
+
+onMounted(()=>{
+  userStore.fetchUserInfo();
+});
 
 </script>
 

@@ -69,7 +69,8 @@ const eventTypeText = (type: number): string => {
     1: '情感检测',
     2: '入侵检测',
     3: '陌生人检测',
-    4: '义工交互'
+    4: '义工交互',
+    5: '摔倒检测',
   } as { [key: number]: string };
   return types[type] || '未知类型';
 };

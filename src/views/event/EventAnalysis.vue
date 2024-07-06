@@ -94,8 +94,6 @@ const initLineChart = (data: EventData[]) => {
   return acc;
 }, {} as Record<string, Record<string, number>>); // 使用类型断言确保初始值类型正确
 
-
-
   const dates = [...new Set(data.map(d => formatDate(d.event_date)))].sort();
 
   const series = Object.keys(seriesData).map(key => ({

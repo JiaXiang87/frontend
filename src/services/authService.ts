@@ -17,3 +17,18 @@ export const apiLogin = async (username: string, password: string): Promise<Logi
   });
   return response.data;
 };
+
+export const getUserInfo = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error getting userInfo:', error);
+    throw error;
+  }
+};

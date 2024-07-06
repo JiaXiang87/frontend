@@ -89,6 +89,7 @@ const newTask = reactive({
   task_type: '',
   start_time: '',
   end_time: '',
+  status:'',
   camera_id: 0
 });
 
@@ -109,7 +110,7 @@ const eventTypeText = (type: string): string => {
     '3': '陌生人检测',
     '4': '义工交互',
     '5': '摔倒检测',
-  } as { [key: number]: string };
+  } as { [key: string]: string };
   return types[type] || '未知类型';
 };
 
