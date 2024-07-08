@@ -58,6 +58,11 @@ const routes = [
         name: 'account',
         component: () => import("../views/AdminInfo.vue")
       },
+      {
+        path: '/heartRate',
+        name: 'heartRate',
+        component: () => import("../views/heartRate.vue")
+      },
     ]
   },
   {

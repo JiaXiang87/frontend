@@ -1,7 +1,8 @@
 <template>
   <div class="container">
+    <div class="logo">欢迎登录智慧养老系统</div>
     <div class="login-wrapper">
-      <div class="header">用户登录</div>
+      <div class="header">管理员登录</div>
       <div class="form-wrapper">
         <input type="text" v-model="username"  placeholder="请输入用户名"  class="input-item">
         <input type="password" v-model="password"  placeholder="请输入密码"  class="input-item">
@@ -54,11 +55,22 @@ const login = async () => {
   .container {
     height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     background-image: linear-gradient(to right, #c2dffb, #a8a6ee);
   }
-  
+
+  .logo {
+    position: relative;
+    top:-75px;
+    font-size: 36px;
+    font-weight: bold;
+  /*   color: #007bff; */
+    margin-bottom: 20px; /* 调整间距以适应外观 */
+    text-align: center;
+  }
+
   .login-wrapper {
     width: 300px;
     background-color: white;

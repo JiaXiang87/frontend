@@ -3,37 +3,27 @@
   <a-card>
     <div class="greet">
       <img v-if="userStore.token" src="../assets/avatar.jpg" alt="">
-      <img v-else src="" alt="">
-      <span class="greetText">
-      {{ greetingMessage1 }}{{ userName }}{{ greetingMessage2 }}
-      </span>
+      <span class="greetText">{{ greetingMessage1 }}{{ userName }}{{ greetingMessage2 }}</span>
     </div>
   </a-card>
-  <a-card title="人员数量统计">
-    <a-descriptions bordered>
-      <a-descriptions-item label="老人" >{{ personData.elderly_count }}</a-descriptions-item>
-      <a-descriptions-item label="工作人员" >{{ personData.employee_count }}</a-descriptions-item>
-      <a-descriptions-item label="义工" >{{ personData.employee_count }}</a-descriptions-item>
-      </a-descriptions>
-  </a-card>
-  <a-card title="任务数量统计">
-    <a-descriptions bordered>
-      <a-descriptions-item label="运行中" >{{ eventData.run_count }}</a-descriptions-item>
-      <a-descriptions-item label="等待中" >{{ eventData.pend_count }}</a-descriptions-item>
-      <a-descriptions-item label="已完成" >{{ eventData.finish_count }}</a-descriptions-item>
-      </a-descriptions>
-  </a-card>
-  <a-card title="监控数量统计">
-    <a-descriptions bordered>
-      <a-descriptions-item label="运行中" >{{ monitorData.alive_count }}</a-descriptions-item>
-      <a-descriptions-item label="已停用" >{{ monitorData.dead_count }}</a-descriptions-item>
-      <a-descriptions-item label="故障中" >{{ monitorData.rest_count }}</a-descriptions-item>
-      </a-descriptions>
-  </a-card>
+  <div class="dashboard" >
+    <a-card class="bar-chart" title="人员数量统计">
+      <div class="chart-container1" id="main-bar" style="height: 800px;"></div>
+    </a-card>
+    <div class="pie-charts">
+      <a-card title="任务数量统计">
+        <div class="chart-container2" id="task-pie" style="height: 400px;"></div>
+      </a-card>
+      <a-card title="监控数量统计">
+        <div class="chart-container2" id="monitor-pie" style="height: 400px;"></div>
+      </a-card>
+    </div>
+  </div>
 </template>
 
 <script lang='ts' setup>
-import { ref, onMounted, computed, reactive } from 'vue';
+import { ref, onMounted, computed, reactive,nextTick } from 'vue';
+import * as echarts from 'echarts';
 import { useUserStore } from '../stores/userStore';
 import {getOldPersonsCount} from '../services/oldPersonService'
 import {getEmployeesCount} from '../services/employeeService'
@@ -95,22 +85,116 @@ const fetchData = async ()=>{
    Object.assign(eventData,tasks);
 }
 
+const initBarChart = () => {
+  const chartDom = document.getElementById('main-bar');
+  const myChart = echarts.init(chartDom);
+  const option = {
+    xAxis: {
+      type: 'category',
+      data: ['老人', '工作人员', '义工']
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: [
+      {
+        data: [personData.elderly_count, personData.employee_count, personData.volunteer_count],
+        type: 'bar'
+      }
+    ]
+  };
+  myChart.setOption(option);
+};
+
+const initPieChart = (containerId:string, data:any) => {
+  const chartDom = document.getElementById(containerId);
+  const myChart = echarts.init(chartDom);
+  const option = {
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      top: '5%',
+      left: 'center'
+    },
+    series: [
+      {
+        name: '任务状态',
+        type: 'pie',
+        radius: '50%',
+        data: data,
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  };
+  myChart.setOption(option);
+};
 
 onMounted(() => {
   updateGreeting();
-  fetchData();
-});
+  fetchData().then(() => {
+    nextTick(() => {
+      initBarChart();
+      initPieChart('task-pie', [
+        { value: eventData.run_count, name: '运行中' },
+        { value: eventData.pend_count, name: '等待中' },
+        { value: eventData.finish_count, name: '已完成' }
+      ]);
+      initPieChart('monitor-pie', [
+        { value: monitorData.alive_count, name: '运行中' },
+        { value: monitorData.dead_count, name: '已停用' },
+        { value: monitorData.rest_count, name: '故障中' }
+      ]);
+    });
+  });
+  });
 </script>
 
 <style scoped>
+.dashboard {
+  display: flex;
+  flex-wrap: nowrap; /* 防止内容换行 */
+  justify-content: space-between;
+  margin: 20px 0;
+}
 
-.greet img{
+.bar-chart {
+  flex: 1; /* 柱状图占用更多空间 */
+  height: 400px; /* 设定固定高度确保对齐 */
+}
+
+.pie-charts {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* 两个饼图共享剩余空间 */
+  gap: 20px; /* 在两个饼图之间添加间隙 */
+}
+
+.chart-container1 {
+  width: 100%; 
+  height: 50%; 
+}
+
+.chart-container2 {
+  width: 100%; /* 确保图表填充整个卡片容器 */
+  height: 100%; /* 确保图表填充整个卡片容器 */
+}
+
+.greet img {
   width: 60px;
   height: 60px;
   border-radius: 50%;
 }
-.greet .greetText{
+
+.greet .greetText {
   margin-left: 20px;
   font-size: 20px;
 }
 </style>
+

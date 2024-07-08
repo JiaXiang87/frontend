@@ -285,11 +285,17 @@ const submitNewTask = async () => {
         rtsp_url: `rtsp://47.93.76.253:8554/${formattedTask.url_string}`,
         stream_key: formattedTask.url_string
       });
-      console.log("lalala",response);
+/*       console.log("lalala",response); */
     }
       catch(error){
         console.log("error:",error);
       }
+
+/*       setTimeout(() => {
+        const alertMessage = getAlertMessage(formattedTask.task_type);
+        alert(alertMessage);  
+      }, 30000);   */
+
       addModalVisible.value = false;
       loadTasks();  // 重新加载任务列表
     } catch (error) {
@@ -298,6 +304,17 @@ const submitNewTask = async () => {
   } else {
     message.error('请完整填写任务时间');
   }
+};
+
+const getAlertMessage = (taskType:string) => {
+  const typeMessages = {
+    '1': '情感检测任务将开始，请准备。',
+    '2': '入侵检测任务将开始，请准备。',
+    '3': '陌生人检测任务将开始，请准备。',
+    '4': '义工交互任务将开始，请准备。',
+    '5': '摔倒检测任务将开始，请准备。',
+  } as { [key: string]: string };
+  return typeMessages[taskType] || '未知类型任务将开始，请准备。';
 };
 
 onMounted(() => {

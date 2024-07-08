@@ -56,6 +56,12 @@
             <span>智能语言聊天</span>
           </router-link>
         </a-menu-item>
+        <a-menu-item key="6">
+          <router-link to="/heartRate">
+            <heart-outlined />
+            <span>老人心率监控</span>
+          </router-link>
+        </a-menu-item>
       </a-menu>
     </a-layout-sider>
 
@@ -109,7 +115,7 @@
 import { ref, computed, watch, onMounted, } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserStore } from '../stores/userStore';
-import { UserOutlined,HomeOutlined,InsertRowBelowOutlined,ExceptionOutlined,RobotOutlined,LogoutOutlined } from '@ant-design/icons-vue';
+import { UserOutlined,HomeOutlined,InsertRowBelowOutlined,ExceptionOutlined,RobotOutlined,LogoutOutlined,HeartOutlined } from '@ant-design/icons-vue';
 
 const userStore = useUserStore()
 
@@ -148,6 +154,7 @@ const breadcrumbs = computed(() => {
     'aiChat': '智能语言聊天',
     'eventAnalysis': '事件管理 / 事件分析',
     'account': '管理员中心',
+    'heartRate': '老人心率监控',
   };
 
   return paths.map(path => breadcrumbsMap[path] || '未知页面');

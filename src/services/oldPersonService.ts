@@ -82,3 +82,18 @@ export const updateOldPerson = async (id: number, person: any) => {
     throw error;
   }
 };
+
+export const getOldPersonsHealth = async () => {
+  try {
+    const token = getToken();
+    const response = await axios.get(`${API_URL}/oldperson_count`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching old persons:', error);
+    throw error;
+  }
+};
