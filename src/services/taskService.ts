@@ -15,7 +15,23 @@ export const getAllTasks = async () => {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log(response.data);
+    //  console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('获取任务失败:', error);
+    throw error;
+  }
+};
+
+export const getStatusCount = async () => {
+  try {
+    const token = getToken();
+    const response = await axios.get(`${API_URL}/tasks/status_counts`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    //  console.log(response.data);
     return response.data;
   } catch (error) {
     console.error('获取任务失败:', error);

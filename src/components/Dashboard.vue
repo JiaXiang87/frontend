@@ -71,7 +71,8 @@
         <!-- 用户信息显示部分 -->
         <a-dropdown>
           <div class="user-info" style="display: flex; align-items: center; cursor: pointer;">
-            <a-avatar :src="userAvatar" />
+            <img v-if="isLoggedIn" class="avatar" src="../assets/avatar.jpg" alt="">
+            <a-avatar v-else src="" />
             <span style="margin-left: 8px;">{{ userName }}</span>
             <a-button v-if="!isLoggedIn" @click="goToLogin">登录</a-button>
           </div>
@@ -79,9 +80,6 @@
             <a-menu>
               <a-menu-item>
                 <router-link to="/account">管理员中心</router-link>
-              </a-menu-item>
-              <a-menu-item>
-                <router-link to="/settings">管理员设置</router-link>
               </a-menu-item>
               <a-menu-item @click="logout">
                 <logout-outlined/>
@@ -123,10 +121,9 @@ const handleCollapse = (collapse: boolean) => {
 const isLoggedIn = computed(() => {
   return userStore.token ? true : false
 });
-const userAvatar = computed(() => {
-  const avatarUrl = "https://c-ssl.dtstatic.com/uploads/item/202004/04/20200404232342_cA5xn.thumb.400_0.jpeg";
-  return avatarUrl;         
-});
+/* const userAvatar = computed(() => {
+  return isLoggedIn.value ? "../assets/avatar.jpg" : '';         
+}); */
 const userName = computed(() => isLoggedIn.value ? userStore.userInfo.realName : '未登录');
 
 const route = useRoute();
@@ -150,6 +147,7 @@ const breadcrumbs = computed(() => {
     'events': '事件管理 / 事件列表',
     'aiChat': '智能语言聊天',
     'eventAnalysis': '事件管理 / 事件分析',
+    'account': '管理员中心',
   };
 
   return paths.map(path => breadcrumbsMap[path] || '未知页面');
@@ -179,5 +177,10 @@ onMounted(()=>{
   margin: 16px;
   color:#fff;
   font-size: 20px;
+}
+.avatar{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
 }
 </style>

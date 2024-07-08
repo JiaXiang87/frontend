@@ -21,6 +21,21 @@ export const getVolunteers = async () => {
   }
 };
 
+export const getVolunteersCount = async () => {
+  try {
+    const token = getToken();
+    const response = await axios.get(`${API_URL}/volunteers/count`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching volunteers:', error);
+    throw error;
+  }
+};
+
 export const deleteVolunteer = async (id: number) => {
   try {
     const token = getToken();

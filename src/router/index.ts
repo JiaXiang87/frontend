@@ -52,7 +52,12 @@ const routes = [
         path: '/task',
         name: 'task',
         component: () => import("../views/monitor/TaskView.vue")
-      }
+      },
+      {
+        path: '/account',
+        name: 'account',
+        component: () => import("../views/AdminInfo.vue")
+      },
     ]
   },
   {

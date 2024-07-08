@@ -26,6 +26,9 @@
         <span v-else-if="column.key === 'event_type'">
           {{ eventTypeText(record.event_type) }}
         </span>
+        <span v-else-if="column.key === 'task_id'">
+          {{ formatTaskId(record.task_id)}}
+        </span>
         <span v-else-if="column.key === 'oldperson_id'">
           {{ formatOldPersonId(record.oldperson_id) }}
         </span>
@@ -57,6 +60,7 @@ const modalVisible = ref(false);
 const currentRecord = ref({
   id: 0,
   event_type: 0,
+  task_id: 0,
   event_date: "",
   event_desc: "",
   oldperson_id: 0,
@@ -79,9 +83,14 @@ const formatOldPersonId = (id: number) => {
   return id === 0 ? '无' : id.toString();
 };
 
+const formatTaskId = (id: number) => {
+  return id === 0 ? '无' : id.toString();
+};
+
 const columns = reactive([
   { title: '编号', dataIndex: 'id', key: 'id' },
   { title: '事件类型', dataIndex: 'event_type', key: 'event_type' },
+  { title: '对应任务', dataIndex: 'task_id', key: 'task_id' },
   { title: '日期', dataIndex: 'event_date', key: 'event_date' },
   { title: '地点', dataIndex: 'event_location', key: 'event_location' },
   { title: '相关老人', dataIndex: 'oldperson_id', key: 'oldperson_id' },
@@ -111,6 +120,7 @@ const resetSearch = () => {
 const fetchEvents = async () => {
   try {
     const eventData = await getEvents();
+    console.log("eventData:",eventData);
     events.value = eventData;
   } catch (error) {
     message.error('获取事件数据失败');

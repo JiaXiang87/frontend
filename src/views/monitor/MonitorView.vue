@@ -14,7 +14,7 @@
       </template>
     </a-table>
 
-    <a-modal v-model:visible="modalVisible" :title="`监控 - ${currentRecord?.id}`" @ok="handleOk" @cancel="handleCancel">
+    <a-modal v-model:visible="modalVisible" width="900px" :title="`监控 - ${currentRecord?.id}`" @ok="handleOk" @cancel="handleCancel">
       <video ref="videoRef" controls style="width: 100%">
         Your browser does not support the video tag.
       </video>
@@ -118,6 +118,7 @@ const handleCancel = () => {
 const loadData = async () => {
   try {
     const monitors = await getAllVideoMonitors();
+    console.log("lallala",monitors);
     data.value = monitors;
   } catch (error) {
     message.error('加载视频监控数据失败');

@@ -21,6 +21,21 @@ export const getOldPersons = async () => {
   }
 };
 
+export const getOldPersonsCount = async () => {
+  try {
+    const token = getToken();
+    const response = await axios.get(`${API_URL}/oldpersons/count`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching old persons:', error);
+    throw error;
+  }
+};
+
 export const deleteOldPerson = async (id: number) => {
   try {
     const token = getToken();

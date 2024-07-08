@@ -21,6 +21,21 @@ export const getEmployees = async () => {
   }
 };
 
+export const getEmployeesCount = async () => {
+  try {
+    const token = getToken();
+    const response = await axios.get(`${API_URL}/employees/count`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    throw error;
+  }
+};
+
 export const deleteEmployee = async (id: number) => {
   try {
     const token = getToken();

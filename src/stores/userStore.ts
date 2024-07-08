@@ -28,7 +28,7 @@ export const useUserStore = defineStore('user', {
           },
         });
         const data = await response.json();
-        console.log(data);
+        //  console.log(data);
         this.userInfo = {
           id: data.id,
           username: data.username,
